@@ -1,0 +1,71 @@
+version: '3.9'
+
+services:
+  source_db:
+    image: debezium/postgres:9.6
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=application
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=qwerty123
+
+  target_db:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.13.4
+    ports:
+      - "9200:9200"
+    environment:
+      - http.host=0.0.0.0
+      - transport.host=127.0.0.1
+      - xpack.security.enabled=false
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.3.0
+    restart: on-failure
+    ports:
+      - 5601:5601
+    environment:
+      - xpack.security.enabled=false
+      - ELASTICSEARCH_HOSTS=http://target_db:9200
+    depends_on:
+      - target_db
+
+  zookeeper:
+    image: debezium/zookeeper:${DEBEZIUM_VERSION}
+    ports:
+      - "2181:2181"
+      - "2888:2888"
+      - "3888:3888"
+
+  kafka:
+    image: debezium/kafka:${DEBEZIUM_VERSION}
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    depends_on:
+      - zookeeper
+    environment:
+      - ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_ADVERTISED_LISTENERS=LISTENER_EXT://localhost:29092,LISTENER_INT://kafka:9092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=LISTENER_INT:PLAINTEXT,LISTENER_EXT:PLAINTEXT
+      - KAFKA_LISTENERS=LISTENER_INT://0.0.0.0:9092,LISTENER_EXT://0.0.0.0:29092
+      - KAFKA_INTER_BROKER_LISTENER_NAME=LISTENER_INT
+
+  connect:
+    restart: on-failure
+    build: 
+      context: ./connect-jdbc-es
+      args:
+        DB_VER: $DEBEZIUM_VERSION
+    ports:
+      - "8083:8083"
+    environment:
+      - BOOTSTRAP_SERVERS=kafka:9092
+      - GROUP_ID=1
+      - CONFIG_STORAGE_TOPIC=connect_configs
+      - OFFSET_STORAGE_TOPIC=connect_offsets
+      - STATUS_STORAGE_TOPIC=connect_statuses
+    depends_on:
+      - zookeeper
+      - kafka
+      - target_db

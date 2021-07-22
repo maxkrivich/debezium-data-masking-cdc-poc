@@ -1,0 +1,21 @@
+{
+    "mappings": {
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "first_name": {
+                "type": "text"
+            },
+            "last_name": {
+                "type": "text"
+            },
+            "email": {
+                "type": "text"
+            },
+            "credit_card": {
+                "type": "text"
+            }
+        }
+    }
+}

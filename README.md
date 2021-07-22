@@ -1,5 +1,5 @@
 # Debezium data masking demo
-This setup is going to demonstrate how to receive events from PostgreSQL database and stream them down to an Elasticsearch server with masking data in an event using the Devbezium + SMT.
+This setup is going to demonstrate how to receive events from PostgreSQL database and stream them down to an Elasticsearch server with masking data in an event using the Debezium + SMT.
 
 ![Untitled Diagram](https://user-images.githubusercontent.com/12199867/126694975-7a8d5aeb-fa06-4d25-92ea-7643de1d52c3.jpg)
 
